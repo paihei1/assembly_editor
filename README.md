@@ -3,24 +3,36 @@
 ```sh
 git clone https://github.com/libsdl-org/SDL vendored/SDL
 git clone https://github.com/libsdl-org/SDL_ttf vendored/SDL_ttf
-git clone https://github.com/ocornut/imgui vendored/imgui
+git clone https://github.com/ocornut/imgui vendored/imgui/imgui
+```
+prepare SDL:
+```sh
+.../assembly_editor/vendored/SDL> cmake . -DSDL_STATIC=ON
+```
+prepare SDL_ttf, on Windows:
+```sh
+vendored/SDL_ttf/external/Get-GitModules.ps1
+```
+or on linux
+```sh
+vendored/SDL_ttf/external/download.sh
 ```
 
-and download single files (e.g. with curl):
+and download single files (e.g. with wget):
 ```sh
-curl 'https://github.com/hanickadot/compile-time-regular-expressions/tree/main/single-header/ctre.hpp' > vendored/
-curl 'https://github.com/canonical/Ubuntu-Sans-Mono-fonts/blob/main/fonts/ttf/UbuntuSansMono-Regular.ttf' > inputs/
+wget -O vendored/ctre.hpp https://raw.githubusercontent.com/hanickadot/compile-time-regular-expressions/main/single-header/ctre.hpp
+wget -O 'inputs/UbuntuSansMono-Regular.ttf' 'https://raw.githubusercontent.com/canonical/Ubuntu-Sans-Mono-fonts/main/fonts/ttf/UbuntuSansMono-Regular.ttf'
 ```
 
 building:
 ```sh
-cmake -S . -B out
-cmake --build out
+cmake -S . -B build
+cmake --build build
 ```
 
 running the program then MUST be done FROM THE PROJECT ROOT PATH, e.g.
 ```sh
-.../assembly_editor> out/Debut/hello.exe
+.../assembly_editor> build/Debug/hello.exe
 ```
 otherwise it will not find the input files.
 
