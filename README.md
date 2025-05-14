@@ -1,4 +1,39 @@
-## setup:
+# Assembly Editor
+## The Idea
+- fearless editing with correctness preserving changes
+- direct and visual performance feedback from simulated and real testing execution
+
+## Current State
+### basic editing on x86 assembly (in proprietary format)
+- only really supports the general purpose registers, no control flow
+- isa spec read from extension files
+### full undo/redo
+
+## Roadmap
+### other positions
+- support high bytes in change-builder
+- moving for xmm-registers
+- variable displaying of all registers, flags
+- understanding of the stack / memory around a register
+### control flow
+- jump table, updated with changes
+- basic blocks, previous/next instruction(-s)
+- mark registers dead at end
+- eliminate dead swaps/moves
+### file format
+- in/out assembly/machine code
+- replace regex parsing with custom solution
+### performance simulation
+- simulated backend
+- detailed example project, usecase
+- new visualization with results
+- new design, workflow, UI
+### more elaborate change tree
+### higher level language
+- export to higher level
+- update from higher level changes
+
+## Setup after cloning the Repository
 (run from project root folder)
 ```sh
 git clone https://github.com/libsdl-org/SDL vendored/SDL
