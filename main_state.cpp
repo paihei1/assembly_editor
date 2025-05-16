@@ -3,6 +3,7 @@
 MainState init_example_main_state() {
 	MainState result{
 		.extensions = {
+			read_instruction_set_extension("inputs/builtins.txt"), // has to be first
 			read_instruction_set_extension("inputs/binary.txt"),
 			read_instruction_set_extension("inputs/bits.txt"),
 			read_instruction_set_extension("inputs/cmp.txt"),

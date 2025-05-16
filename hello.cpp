@@ -35,7 +35,13 @@ int main(int argc, char* argv[]) {
 
     int menu_height = 20;
     MainState main_state = init_example_main_state();
-    MainViewPort main_view = { {0,menu_height,800,600-menu_height}, 0,0,40,&main_state};
+    MainViewPort main_view = {
+        .frame = {0,menu_height,800,600 - menu_height},
+        .vertical_scroll_instructions = 0,
+        .side_scroll_pixels = 0,
+        .zoom_vertical = 40,
+        .main_state = &main_state
+    };
     TTF_Init();
     TTF_Font* font = TTF_OpenFont("inputs/UbuntuSansMono-Regular.ttf", 24);
     if (!font) {

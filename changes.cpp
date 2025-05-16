@@ -39,23 +39,23 @@ bool move_swap_up_through(std::vector<InstructionSetExtension>& extensions, Inst
 		
 		if (!op) continue;
 
-		if (op == move.pos1) {
+		if (op == move.pos1 || op < 8 && op + 12 == move.pos1) {
 			if ((op_head & OF_TYPE) == OF_OUT) pos1_is_written = true;
 			if ((op_head & OF_TYPE) == OF_IN) pos1_is_read = true;
 			if ((op_head & OF_TYPE) == OF_IO) pos1_io = true;
 
-			if (OP_IS_REGISTER(move.pos2) && ((op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_REGISTER))) return false;
-			if (OP_IS_HIGH_BYTE(move.pos2) && ((op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_HIGH_BYTE))) return false;
+			if (OP_IS_REGISTER(move.pos2) && !(op_head & OF_CAN_BE_REGISTER)) return false;
+			if (move.pos2 > 0x13ull && OP_IS_HIGH_BYTE(op)) return false;
 			if (OP_IS_SIMD_REGISTER(move.pos2) && OP_SIMD_REGISTER(move.pos2) < 16 && (!(op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_LOW_SIMD))) return false;
 			if (OP_IS_SIMD_REGISTER(move.pos2) && OP_SIMD_REGISTER(move.pos2) > 15 && (!(op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_HIGH_SIMD))) return false;
 		}
-		if (op == move.pos2) {
+		if (op == move.pos2 || op < 8 && op + 12 == move.pos2) {
 			if ((op_head & OF_TYPE) == OF_OUT) pos2_is_written = true;
 			if ((op_head & OF_TYPE) == OF_IN) pos2_is_read = true;
 			if ((op_head & OF_TYPE) == OF_IO) pos2_io = true;
 
-			if (OP_IS_REGISTER(move.pos1) && ((op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_REGISTER))) return false;
-			if (OP_IS_HIGH_BYTE(move.pos1) && ((op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_HIGH_BYTE))) return false;
+			if (OP_IS_REGISTER(move.pos1) && !(op_head & OF_CAN_BE_REGISTER)) return false;
+			if (move.pos1 > 0x13ull && OP_IS_HIGH_BYTE(op)) return false;
 			if (OP_IS_SIMD_REGISTER(move.pos1) && OP_SIMD_REGISTER(move.pos1) < 16 && (!(op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_LOW_SIMD))) return false;
 			if (OP_IS_SIMD_REGISTER(move.pos1) && OP_SIMD_REGISTER(move.pos1) > 15 && (!(op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_HIGH_SIMD))) return false;
 		}
@@ -130,23 +130,23 @@ bool update_down_state(std::vector<InstructionSetExtension>& extensions, std::sp
 
 		if (!op) continue;
 
-		if (op == move.pos1) {
+		if (op == move.pos1 || op < 8 && op + 12 == move.pos1) {
 			if ((op_head & OF_TYPE) == OF_OUT) pos1_is_written = true;
 			if ((op_head & OF_TYPE) == OF_IN) pos1_is_read = true;
 			if ((op_head & OF_TYPE) == OF_IO) pos1_io = true;
 
-			if (OP_IS_REGISTER(move.pos2) && ((op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_REGISTER))) return false;
-			if (OP_IS_HIGH_BYTE(move.pos2) && ((op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_HIGH_BYTE))) return false;
+			if (OP_IS_REGISTER(move.pos2) && !(op_head & OF_CAN_BE_REGISTER)) return false;
+			if (move.pos2 > 0x13ull && OP_IS_HIGH_BYTE(op)) return false;
 			if (OP_IS_SIMD_REGISTER(move.pos2) && OP_SIMD_REGISTER(move.pos2) < 16 && (!(op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_LOW_SIMD))) return false;
 			if (OP_IS_SIMD_REGISTER(move.pos2) && OP_SIMD_REGISTER(move.pos2) > 15 && (!(op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_HIGH_SIMD))) return false;
 		}
-		if (op == move.pos2) {
+		if (op == move.pos2 || op < 8 && op + 12 == move.pos2) {
 			if ((op_head & OF_TYPE) == OF_OUT) pos2_is_written = true;
 			if ((op_head & OF_TYPE) == OF_IN) pos2_is_read = true;
 			if ((op_head & OF_TYPE) == OF_IO) pos2_io = true;
 
-			if (OP_IS_REGISTER(move.pos1) && ((op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_REGISTER))) return false;
-			if (OP_IS_HIGH_BYTE(move.pos1) && ((op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_HIGH_BYTE))) return false;
+			if (OP_IS_REGISTER(move.pos1) && !(op_head & OF_CAN_BE_REGISTER)) return false;
+			if (move.pos1>0x13ull && OP_IS_HIGH_BYTE(op)) return false;
 			if (OP_IS_SIMD_REGISTER(move.pos1) && OP_SIMD_REGISTER(move.pos1) < 16 && (!(op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_LOW_SIMD))) return false;
 			if (OP_IS_SIMD_REGISTER(move.pos1) && OP_SIMD_REGISTER(move.pos1) > 15 && (!(op_head & OF_SIMD_REGISTER) || !(op_head & OF_CAN_BE_HIGH_SIMD))) return false;
 		}
@@ -183,7 +183,7 @@ bool update_down_state(std::vector<InstructionSetExtension>& extensions, std::sp
 	return true;
 }
 
-Change build_horizontal_change(std::span<Instruction> instructions, std::vector<InstructionSetExtension>& extensions, int index, unsigned char pos1, unsigned char pos2) {
+Change build_horizontal_change(std::span<Instruction> instructions, std::vector<InstructionSetExtension>& extensions, int index, unsigned long long pos1, unsigned long long pos2) {
 	Change result_change {};
 	RegisterSwap& result = result_change.horizontal;
 	result = {
@@ -192,14 +192,14 @@ Change build_horizontal_change(std::span<Instruction> instructions, std::vector<
 		.explicit_swap_at_end = 3,
 		.first_instruction_affected = 0,
 		.last_instruction_affected = (int)instructions.size()-1,
-		.pos1 = (unsigned long long)pos1 | 0x10ull,
-		.pos2 = (unsigned long long)pos2 | 0x10ull
+		.pos1 = pos1,
+		.pos2 = pos2
 	};
 	TwoRegisterMove up_state = {
 		.pos1_moves_to_pos2 = true,
 		.pos2_moves_to_pos1 = true,
-		.pos1 = pos1 | 0x10ull,
-		.pos2 = pos2 | 0x10ull
+		.pos1 = pos1,
+		.pos2 = pos2
 	};
 	for (int i = index - 1; i != -1; i--) {
 		if (!move_swap_up_through(extensions, instructions[i], up_state)) {
@@ -217,8 +217,8 @@ Change build_horizontal_change(std::span<Instruction> instructions, std::vector<
 		.pos1_must_be_dead = true,
 		.pos2_must_be_dead = true,
 		.change_pos_if_dead = index-1,
-		.pos1 = pos1 | 0x10ull,
-		.pos2 = pos2 | 0x10ull
+		.pos1 = pos1,
+		.pos2 = pos2
 	};
 	for (int i = index; i != instructions.size(); i++) {
 		if (!update_down_state(extensions, instructions, i, down_state)) {
@@ -236,6 +236,13 @@ Change build_horizontal_change(std::span<Instruction> instructions, std::vector<
 }
 
 void swap_registers(Instruction& instruction, unsigned long long pos1, unsigned long long pos2) {
+	if (pos1 & 0x20ull) {
+		for (int i = 0; i != 4;i++) {
+			if (instruction.operands[i] == pos1) instruction.operands[i] = pos2;
+			else if (instruction.operands[i] == pos2) instruction.operands[i] = pos1;
+		}
+		return;
+	}
 	unsigned long long pos1_reg = (pos1 & 0x10ull) ? pos1 & 0xfull : pos1 & 0x3ull;
 	unsigned long long pos2_reg = (pos2 & 0x10ull) ? pos2 & 0xfull : pos2 & 0x3ull;
 	for (int i = 0; i != 4; i++) if (unsigned long long& op = instruction.operands[i]) {
@@ -254,6 +261,13 @@ void swap_registers(Instruction& instruction, unsigned long long pos1, unsigned 
 	}
 }
 void swap_out_registers(Instruction& instruction, InstructionFootprint& footprint, unsigned long long pos1, unsigned long long pos2) {
+	if (pos1 & 0x20ull) {
+		for (int i = 0; i != 4;i++) if ((footprint.operands[i].head & OF_TYPE) == OF_OUT) {
+			if (instruction.operands[i] == pos1) instruction.operands[i] = pos2;
+			else if (instruction.operands[i] == pos2) instruction.operands[i] = pos1;
+		}
+		return;
+	}
 	unsigned long long pos1_reg = (pos1 & 0x10ull) ? pos1 & 0xfull : pos1 & 0x3ull;
 	unsigned long long pos2_reg = (pos2 & 0x10ull) ? pos2 & 0xfull : pos2 & 0x3ull;
 	for (int i = 0; i != 4; i++) if (unsigned long long& op = instruction.operands[i]) if ((footprint.operands[i].head & OF_TYPE) == OF_OUT) {
@@ -278,44 +292,76 @@ void apply_horizontal_change(std::vector<Instruction>& instructions, std::vector
 		Instruction& i = instructions[change.last_instruction_affected];
 		swap_out_registers(i, extensions[i.extension].instructions[i.index], change.pos1, change.pos2);
 	}
-	else {
-		instructions.emplace(instructions.cbegin() + change.last_instruction_affected + 1);
+	else if (change.pos1 < 0x20ull) {
 		if (change.explicit_swap_at_end == 1)
-			load_instruction(std::string("MOV64 ") + REGISTER_NAMES[change.pos1 & 0xfull] + " " + REGISTER_NAMES[change.pos2 & 0xfull], 
-				instructions[change.last_instruction_affected + 1], extensions);
+			instructions.insert(instructions.cbegin() + change.last_instruction_affected + 1, { 0,0,{change.pos1,change.pos2,0,0} });
 		else if (change.explicit_swap_at_end == 2)
-			load_instruction(std::string("MOV64 ") + REGISTER_NAMES[change.pos2 & 0xfull] + " " + REGISTER_NAMES[change.pos1 & 0xfull],
-				instructions[change.last_instruction_affected + 1], extensions);
-		else load_instruction(std::string("XCHG64 ") + REGISTER_NAMES[change.pos1 & 0xfull] + " " + REGISTER_NAMES[change.pos2 & 0xfull],
-				instructions[change.last_instruction_affected + 1], extensions);
-
+			instructions.insert(instructions.cbegin() + change.last_instruction_affected + 1, { 0,0,{change.pos2,change.pos1,0,0} });
+		else instructions.insert(instructions.cbegin() + change.last_instruction_affected + 1, { 0,2,{change.pos1,change.pos2,0,0} });
+	}
+	else {
+		if (change.explicit_swap_at_end == 1)
+			instructions.insert(instructions.cbegin() + change.last_instruction_affected + 1, { 0,3,{change.pos1,change.pos2,0,0} });
+		else if (change.explicit_swap_at_end == 2)
+			instructions.insert(instructions.cbegin() + change.last_instruction_affected + 1, { 0,3,{change.pos2,change.pos1,0,0} });
+		else {
+			instructions.insert(instructions.cbegin() + change.last_instruction_affected + 1, { 0,8,{0x200000040ull,0x16ull,0,0} });
+			// SUB64 64 RSP
+			instructions.insert(instructions.cbegin() + change.last_instruction_affected + 2, { 0,4,{change.pos1,0x00004c0000000000ull,0,0} });
+			// MOVDQU pos1 -> *RSP
+			instructions.insert(instructions.cbegin() + change.last_instruction_affected + 3, { 0,3,{change.pos2, change.pos1,0,0} });
+			// MOVDQU pos2 -> pos1
+			instructions.insert(instructions.cbegin() + change.last_instruction_affected + 4, { 0,3,{0x00004c0000000000ull,change.pos2,0,0} });
+			// MOVDQU *RSP -> pos2
+			instructions.insert(instructions.cbegin() + change.last_instruction_affected + 5, { 0,6,{0x200000040ull,0x16ull,0,0} });
+			// ADD64 64 RSP
+		}
 	}
 	if (!change.explicit_swap_at_start) {
 		Instruction& i = instructions[change.first_instruction_affected];
 		swap_registers(i, change.pos1, change.pos2);
 		swap_out_registers(i, extensions[i.extension].instructions[i.index], change.pos1, change.pos2);
 	}
-	else {
-		instructions.emplace(instructions.cbegin() + change.first_instruction_affected);
+	else if (change.pos1 < 0x20ull) {
 		if (change.explicit_swap_at_start == 1)
-			load_instruction(std::string("MOV64 ") + REGISTER_NAMES[change.pos1 & 0xfull] + " " + REGISTER_NAMES[change.pos2 & 0xfull],
-				instructions[change.first_instruction_affected], extensions);
+			instructions.insert(instructions.cbegin() + change.first_instruction_affected, { 0,0,{change.pos1,change.pos2,0,0} });
 		else if (change.explicit_swap_at_start == 2)
-			load_instruction(std::string("MOV64 ") + REGISTER_NAMES[change.pos2 & 0xfull] + " " + REGISTER_NAMES[change.pos1 & 0xfull],
-				instructions[change.first_instruction_affected], extensions);
-		else load_instruction(std::string("XCHG64 ") + REGISTER_NAMES[change.pos1 & 0xfull] + " " + REGISTER_NAMES[change.pos2 & 0xfull],
-			instructions[change.first_instruction_affected], extensions);
-
+			instructions.insert(instructions.cbegin() + change.first_instruction_affected, { 0,0,{change.pos2,change.pos1,0,0} });
+		else instructions.insert(instructions.cbegin() + change.first_instruction_affected, { 0,2,{change.pos1,change.pos2,0,0} });
+	}
+	else {
+		if (change.explicit_swap_at_start == 1)
+			instructions.insert(instructions.cbegin() + change.first_instruction_affected, { 0,3,{change.pos1,change.pos2,0,0} });
+		else if (change.explicit_swap_at_start == 2)
+			instructions.insert(instructions.cbegin() + change.first_instruction_affected, { 0,3,{change.pos2,change.pos1,0,0} });
+		else {
+			instructions.insert(instructions.cbegin() + change.first_instruction_affected, { 0,8,{0x200000040ull,0x16ull,0,0} });
+			// SUB64 64 RSP
+			instructions.insert(instructions.cbegin() + change.first_instruction_affected + 1, { 0,4,{change.pos1,0x00004c0000000000ull,0,0} });
+			// MOVDQU pos1 -> *RSP
+			instructions.insert(instructions.cbegin() + change.first_instruction_affected + 2, { 0,3,{change.pos2, change.pos1,0,0} });
+			// MOVDQU pos2 -> pos1
+			instructions.insert(instructions.cbegin() + change.first_instruction_affected + 3, { 0,3,{0x00004c0000000000ull,change.pos2,0,0} });
+			// MOVDQU *RSP -> pos2
+			instructions.insert(instructions.cbegin() + change.first_instruction_affected + 4, { 0,6,{0x200000040ull,0x16ull,0,0} });
+			// ADD64 64 RSP
+		}
 	}
 
 }
 void undo_last_horizontal_change(std::vector<Instruction>& instructions, std::vector<InstructionSetExtension>& extensions, RegisterSwap& change) {
+
+	if (change.pos1 >= 0x20ull && change.explicit_swap_at_start == 3)
+		for (int i = 0;i != 4;i++) instructions.erase(instructions.cbegin() + change.first_instruction_affected);
 	if (change.explicit_swap_at_start) instructions.erase(instructions.cbegin() + change.first_instruction_affected);
 	else {
 		Instruction& i = instructions[change.first_instruction_affected];
 		swap_out_registers(i, extensions[i.extension].instructions[i.index], change.pos1, change.pos2);
 		swap_registers(i, change.pos1, change.pos2);
 	}
+
+	if (change.pos1 >= 0x20ull && change.explicit_swap_at_end == 3)
+		for (int i = 0;i != 4;i++) instructions.erase(instructions.cbegin() + change.last_instruction_affected + 1);
 	if (change.explicit_swap_at_end) instructions.erase(instructions.cbegin() + change.last_instruction_affected + 1);
 	else {
 		Instruction& i = instructions[change.first_instruction_affected];

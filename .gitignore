@@ -2,3 +2,4 @@ vendored/
 inputs/*.ttf
 build/
 imgui.ini
+.vs/

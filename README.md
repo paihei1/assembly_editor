@@ -8,12 +8,13 @@
 - only really supports the general purpose registers, no control flow
 - isa spec read from extension files
 ### full undo/redo
-
-## Roadmap
 ### other positions
 - support high bytes in change-builder
 - moving for xmm-registers
 - variable displaying of all registers, flags
+
+## Roadmap
+### other positions
 - understanding of the stack / memory around a register
 ### control flow
 - jump table, updated with changes

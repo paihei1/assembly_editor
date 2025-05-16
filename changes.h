@@ -26,9 +26,9 @@ union Change {
 	InstructionReorder vertical;
 };
 
-Change build_horizontal_change(std::span<Instruction> instructions, std::vector<InstructionSetExtension>& extensions, int index, unsigned char pos1, unsigned char pos2);
-// pos1, pos2: 0b001xxxxx SIMD, 0b0001rrrr Normal register, 0b000001hh High Byte
-// currently only supports normal registers
+Change build_horizontal_change(std::span<Instruction> instructions, std::vector<InstructionSetExtension>& extensions, int index, unsigned long long pos1, unsigned long long pos2);
+// pos1, pos2: 0b001xxxxx SIMD, 0b0001rrrr Normal register
+// currently only supports normal registers and xmm registers, can't combine them, obviously
 // index: number of instructions before the point where two swap instructions are inserted
 
 Change build_vertical_change(std::span<Instruction> instructions, std::vector<InstructionSetExtension>& extensions, int instruction, int number_places_down);

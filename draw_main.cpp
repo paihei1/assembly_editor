@@ -3,35 +3,6 @@
 
 #define DBG(msg) (std::cout << msg << "\n")
 
-#define USE_MASK unsigned long long
-#define USE_RAX (1ull << 0)
-#define USE_RBX (1ull << 1)
-#define USE_RCX (1ull << 2)
-#define USE_RDX (1ull << 3)
-#define USE_RSI (1ull << 4)
-#define USE_RDI (1ull << 5)
-#define USE_RSP (1ull << 6)
-#define USE_RBP (1ull << 7)
-#define USE_R8 (1ull << 8)
-#define USE_R9 (1ull << 9)
-#define USE_R10 (1ull << 10)
-#define USE_R11 (1ull << 11)
-#define USE_R12 (1ull << 12)
-#define USE_R13 (1ull << 13)
-#define USE_R14 (1ull << 14)
-#define USE_R15 (1ull << 15)
-
-#define USE_CF (1ull << 16)
-#define USE_PF (1ull << 17)
-#define USE_AF (1ull << 18)
-#define USE_ZF (1ull << 19)
-#define USE_SF (1ull << 20)
-#define USE_DF (1ull << 21)
-#define USE_OF (1ull << 22)
-
-#define USE_UNKNOWN (1ull << 23)
-
-// xmm0: 1ull << 32 ... xmm31: 1ull << 63
 
 USE_MASK get_use_mask_in(const Instruction instruction, const InstructionFootprint& footprint) {
 	USE_MASK result = USE_MASK(footprint.always_read_registers) | (USE_MASK(footprint.always_read_flags) << 16);
@@ -128,7 +99,7 @@ void draw_position(SDL_Renderer* renderer, DrawState& state,
 	float y = state.y;
 	float y1 = state.y + (state.h - state.text_height) / 2 - 1;
 	float y2 = y1 + state.text_height + 1;
-	float y3 = state.y + state.w;
+	float y3 = state.y + state.h;
 
 	// lower half gray ?
 	// upper half gray ?
@@ -240,11 +211,13 @@ void draw_main(SDL_Renderer* renderer, TTF_Font* font, MainViewPort& view_port)
 	auto& extensions = view_port.main_state->extensions;
 
 	int first_instruction_drawn = int(view_port.vertical_scroll_instructions);
+	if (first_instruction_drawn < 0) first_instruction_drawn = 0;
 	if (first_instruction_drawn > instructions.size()) first_instruction_drawn = instructions.size();
 	int nr_instructions_drawn = int(float(view_port.frame.h) / view_port.zoom_vertical + view_port.vertical_scroll_instructions - float(first_instruction_drawn)) + 1;
+	// if (nr_instructions_drawn < 0) nr_instructions_drawn = 0;
 	if (first_instruction_drawn + nr_instructions_drawn > instructions.size()) nr_instructions_drawn = instructions.size() - first_instruction_drawn;
 	int vertical_scroll_pixels = int((view_port.vertical_scroll_instructions - float(first_instruction_drawn)) * view_port.zoom_vertical);
-	
+
 	SDL_Rect view_translate = {
 		view_port.frame.x - view_port.side_scroll_pixels,
 		view_port.frame.y - vertical_scroll_pixels,
@@ -308,7 +281,7 @@ void draw_main(SDL_Renderer* renderer, TTF_Font* font, MainViewPort& view_port)
 			.y = (i - first_instruction_drawn) * view_port.zoom_vertical,
 			.text_width = text_width,
 			.text_height = text_height,
-			.nr_hits_left = std::popcount((in | in_pointer | in_index | out | out_pointer | out_index) & 0xffffull),
+			.nr_hits_left = 0,
 			.start_pos = -1,
 			.w = view_port.zoom_vertical,
 			.h = view_port.zoom_vertical,
@@ -317,10 +290,13 @@ void draw_main(SDL_Renderer* renderer, TTF_Font* font, MainViewPort& view_port)
 			.background_color = {0,0,0,255},
 			.inactive_color = {100,100,100,255}
 		};
+		for (int i = 0; i != view_port.displayed_positions.size(); i++)
+			if (view_port.displayed_positions[i] & (in | in_pointer | in_index | out | out_pointer | out_index)) state.nr_hits_left++;
 		if (state.nr_hits_left == 0) state.start_pos = 0;
-		for (int r = 0;r != 16;r++) {
+		for (int i = 0; i != view_port.displayed_positions.size(); i++) {
+			state.w = view_port.displayed_position_widths[i];
 			draw_position(renderer, state,
-				1ull << r, use_mask_below, use_mask_above, 
+				view_port.displayed_positions[i], use_mask_below, use_mask_above,
 				in, in_pointer, in_index,
 				out, out_pointer, out_index);
 		}
@@ -360,11 +336,31 @@ void draw_main(SDL_Renderer* renderer, TTF_Font* font, MainViewPort& view_port)
 	SDL_SetRenderClipRect(renderer, NULL);
 }
 
-unsigned char get_mouse_pos_register(MainViewPort& view_port, float mouse_x, float mouse_y) {
-	float result = (mouse_x - view_port.frame.x + view_port.side_scroll_pixels) / view_port.zoom_vertical;
-	if (result < 0) return 0x10;
-	if (result > 15) return 0x1f;
-	return 0x10 + int(result);
+unsigned long long get_mouse_pos_register(MainViewPort& view_port, float mouse_x, float mouse_y) {
+	if (view_port.displayed_positions.empty()) return 0;
+	USE_MASK mask = view_port.displayed_positions.back();
+	int end_pos = 0;
+	for (int i = 0; i != view_port.displayed_positions.size(); i++) {
+		end_pos += view_port.displayed_position_widths[i];
+		if (mouse_x - view_port.frame.x + view_port.side_scroll_pixels < end_pos) {
+			mask = view_port.displayed_positions[i];
+			break;
+		}
+	}
+	for (int i = 0; i != 16; i++) if (mask == 1ull << i) return i | 0x10ull;
+	for (int i = 0; i != 32; i++) if (mask == 1ull << 32 + i) return i | 0x20ull;
+	return 0;
+}
+float get_relative_horizontal_mouse_pos_0_1(MainViewPort& view_port, float mouse_x, float mouse_y) {
+	if (mouse_x - view_port.frame.x + view_port.side_scroll_pixels < 0) return 0;
+	int end_pos = 0;
+	for (int i = 0; i != view_port.displayed_positions.size(); i++) {
+		end_pos += view_port.displayed_position_widths[i];
+		if (mouse_x - view_port.frame.x + view_port.side_scroll_pixels < end_pos) {
+			return (mouse_x - view_port.frame.x + view_port.side_scroll_pixels - end_pos) / view_port.displayed_position_widths[i] + 1.;
+		}
+	}
+	return 1.;
 }
 int get_mouse_pos_instruction(MainViewPort& view_port, float mouse_x, float mouse_y) {
 	float result = (mouse_y - view_port.frame.y) / view_port.zoom_vertical + view_port.vertical_scroll_instructions;
@@ -376,15 +372,21 @@ bool in_viewport(MainViewPort& view_port, float mouse_x, float mouse_y) {
 	return mouse_x - view_port.frame.x >= 0 && mouse_x - view_port.frame.x < view_port.frame.w &&
 		mouse_y - view_port.frame.y >= 0 && mouse_y - view_port.frame.y < view_port.frame.h;
 }
+bool can_swap_registers(unsigned long long pos1, unsigned long long pos2) {
+	if (pos1 == pos2) return false;
+	if ((pos1 & 0xfffffffffffffff0ull) == 0x10ull && (pos2 & 0xfffffffffffffff0ull) == 0x10ull) return true;
+	if ((pos1 & 0xffffffffffffffe0ull) == 0x20ull && (pos2 & 0xffffffffffffffe0ull) == 0x20ull) return true;
+	return false;
+}
 bool update_drag(MainViewPort& view_port, float mouse_x, float mouse_y) {
 	switch (view_port.drag_tracker.type) {
 	case DRAG_HORIZONTAL: {
-		unsigned char new_position = get_mouse_pos_register(view_port, mouse_x, mouse_y);
+		unsigned long long new_position = get_mouse_pos_register(view_port, mouse_x, mouse_y);
 		if (new_position == view_port.drag_tracker.horizontal.last_pos) return false;
 		if (view_port.main_state->temporary_change.type) undo_last_change(view_port.main_state->instructions, view_port.main_state->extensions, &view_port.main_state->temporary_change);
 		view_port.drag_tracker.horizontal.last_pos = new_position;
-		if (new_position == view_port.drag_tracker.horizontal.start_pos) view_port.main_state->temporary_change.type = 0;
-		else {
+		DBG("trying to build horizontal change: " << view_port.drag_tracker.horizontal.position << " " << int(view_port.drag_tracker.horizontal.start_pos) << " " << int(new_position));
+		if (can_swap_registers(new_position,view_port.drag_tracker.horizontal.start_pos)) {
 			DBG("building horizontal change: " << view_port.drag_tracker.horizontal.position << " " << int(view_port.drag_tracker.horizontal.start_pos) << " " << int(new_position));
 			view_port.main_state->temporary_change = build_horizontal_change(
 				view_port.main_state->instructions,
@@ -393,7 +395,9 @@ bool update_drag(MainViewPort& view_port, float mouse_x, float mouse_y) {
 				view_port.drag_tracker.horizontal.start_pos,
 				new_position);
 			apply_change(view_port.main_state->instructions, view_port.main_state->extensions, &view_port.main_state->temporary_change);
+
 		}
+		else view_port.main_state->temporary_change.type = 0;
 		return true;
 	}
 	case DRAG_VERTICAL: {
@@ -418,7 +422,7 @@ bool update_drag(MainViewPort& view_port, float mouse_x, float mouse_y) {
 }
 
 bool main_view_port_handle_event(MainViewPort& view_port, SDL_Event& event, bool ignore_keyboard, bool ignore_mouse) {
-	float scroll_speed = 10;
+	float scroll_speed = -20;
 	int mouse_button_drag = 1;
 
 	switch (event.type) {
@@ -439,14 +443,14 @@ bool main_view_port_handle_event(MainViewPort& view_port, SDL_Event& event, bool
 
 		float pos_x = (event.button.x - view_port.frame.x + view_port.side_scroll_pixels) / view_port.zoom_vertical;
 		float pos_y = (event.button.y - view_port.frame.y) / view_port.zoom_vertical + view_port.vertical_scroll_instructions;
-		float pos_x_p = pos_x - int(pos_x);
+		float pos_x_p = get_relative_horizontal_mouse_pos_0_1(view_port, event.button.x, event.button.y);
 		float pos_y_p = pos_y - int(pos_y);
 		if (pos_x < 0 || pos_x >= 16 || pos_y < 0 || pos_y >= view_port.main_state->instructions.size()) view_port.drag_tracker.type = DRAG_NONE;
 		else if (pos_x_p > pos_y_p == pos_x_p + pos_y_p < 1.) {
 			view_port.drag_tracker.horizontal = {
 				.type = DRAG_HORIZONTAL,
-				.start_pos = unsigned char(pos_x + 0x10),
-				.last_pos = unsigned char(pos_x + 0x10),
+				.start_pos = get_mouse_pos_register(view_port, event.button.x, event.button.y),
+				.last_pos = get_mouse_pos_register(view_port, event.button.x, event.button.y),
 				.position = int(pos_y + 0.5)
 			};
 		}
@@ -475,4 +479,18 @@ bool main_view_port_handle_event(MainViewPort& view_port, SDL_Event& event, bool
 		return update_drag(view_port, event.motion.x, event.motion.y);
 	}
 	return false;
+}
+std::vector<USE_MASK> default_displayed_positions() {
+	std::vector<USE_MASK> result {};
+	result.push_back(0xff0000ull);
+	for (int i = 0; i != 8; i++) result.push_back(1ull << i);
+	for (int i = 32; i != 48; i++) result.push_back(1ull << i);
+	return result;
+}
+std::vector<int> default_displayed_position_widths() {
+	std::vector<int> result{};
+	result.push_back(20);
+	for (int i = 0; i != 8; i++) result.push_back(40);
+	for (int i = 32; i != 48; i++) result.push_back(20);
+	return result;
 }

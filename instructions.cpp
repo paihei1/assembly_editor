@@ -158,7 +158,10 @@ std::string print_instruction(const Instruction& inst, const std::vector<Instruc
 		else if (OP_IS_MEMORY_LOCATION(op))
 			if (OP_MEMORY_SCALE(op)) result += std::format(" *{}[{}{}{:+}]", REGISTER_NAMES[OP_MEMORY_BASE_REGISTER(op)], OP_MEMORY_SCALE(op), REGISTER_NAMES[OP_MEMORY_INDEX_REGISTER(op)], OP_MEMORY_OFFSET(op));
 			else result += std::format(" *{}[{}]", REGISTER_NAMES[OP_MEMORY_BASE_REGISTER(op)], OP_MEMORY_OFFSET(op));
-		else assert(false);
+		else {
+			DBG("op: " << std::hex << op << std::dec);
+			assert(false);
+		}
 	}
 	return result + std::format(" ({},{})", inst.extension, inst.index);
 }
@@ -312,6 +315,7 @@ bool load_instruction(std::string_view source, Instruction& inst, const std::vec
 		else inst.operands[i] = 0;
 	if (!instruction_is_valid(inst, ises)) {
 		DBG("produced invalid instruction");
+		DBG(print_instruction(inst, ises));
 		return false;
 	}
 	return true;

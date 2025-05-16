@@ -93,7 +93,7 @@ InstructionSetExtension read_instruction_set_extension(const std::string& filePa
 #define OP_REGISTER(x) (x & 0xf)
 #define OP_IS_HIGH_BYTE(x) ((x & 0xfffffffffffffffc) == 4)
 #define OP_HIGH_BYTE(x) (x & 3)
-#define OP_IS_SIMD_REGISTER(x) ((x & 0xffffffffffffffc0) == 0x20)
+#define OP_IS_SIMD_REGISTER(x) ((x & 0xffffffffffffffe0) == 0x20)
 #define OP_SIMD_REGISTER(x) (x & 0x1f)
 #define OP_IS_RIP_RELATIVE(x) ((x & 0xffffffff00000000) == 0x0000000300000000)
 #define OP_RIP_RELATIVE(x) (x & 0x00000000ffffffff)
